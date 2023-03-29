@@ -1,21 +1,11 @@
-import dayjs, { Dayjs } from 'dayjs';
-import { useState } from 'react';
 import { View } from 'react-native';
 import { CalenderDays } from './calender-days';
 import { CalenderHeader } from './calender-header';
 import { CalendarList } from './calender-list';
+import { useCalendar } from './use-calendar';
 
 export const Calendar = () => {
-  const [now, setNow] = useState<Dayjs>(dayjs());
-  const [showDate, setShowDate] = useState<Dayjs>(dayjs().set('date', 1));
-  const onNext = () => setShowDate(showDate.add(1, 'month'));
-  const onPrev = () => setShowDate(showDate.subtract(1, 'month'));
-  const onSelect = (date: Dayjs) => {
-    setNow(date);
-    const isSameMonth = dayjs(date).isSame(now, 'month');
-    if (isSameMonth) return;
-    setShowDate(date.clone().set('date', 1));
-  };
+  const { now, showDate, onNext, onPrev, onSelect } = useCalendar();
 
   return (
     <View>
