@@ -1,4 +1,12 @@
-import { createContext, PropsWithChildren, useContext, useState } from 'react';
+import {
+  createContext,
+  PropsWithChildren,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+import { Storage } from '../../utils/storage';
+
 import { Todo } from './todo.type';
 
 interface TodoContext {
@@ -11,26 +19,43 @@ interface TodoContext {
 const TodoContext = createContext<TodoContext | null>(null);
 
 export const TodoProvider = ({ children }: PropsWithChildren) => {
+  const storage = new Storage('@todo');
+
   const [todos, setTodos] = useState<Todo[]>([]);
 
   const addTodo = (text: string) => {
-    setTodos((prev) => [...prev, { id: Date.now(), text }]);
+    const newTodos = [...todos, { id: Date.now(), text }];
+    setTodos(newTodos);
+    storage.setValue(newTodos);
   };
 
   const deleteTodo = (id: number) => {
-    setTodos((prev) => prev.filter((todo) => todo.id !== id));
+    const newTodos = todos.filter((todo) => todo.id !== id);
+    setTodos(newTodos);
+    storage.setValue(newTodos);
   };
 
   const modifyTodo = ({ id, text }: { id: number; text: string }) => {
-    setTodos((prev) =>
-      prev.map((todo) => {
-        if (todo.id === id) {
-          todo.text = text;
-        }
-        return todo;
-      })
-    );
+    const newTodos = todos.map((todo) => {
+      if (todo.id === id) {
+        todo.text = text;
+      }
+      return todo;
+    });
+    setTodos(newTodos);
+    storage.setValue(newTodos);
   };
+
+  useEffect(() => {
+    syncTodo();
+
+    async function syncTodo() {
+      const todo = await storage.getValue();
+      if (Array.isArray(todo)) {
+        setTodos(todo);
+      }
+    }
+  }, []);
 
   return (
     <TodoContext.Provider value={{ todos, addTodo, deleteTodo, modifyTodo }}>
